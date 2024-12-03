@@ -1,4 +1,22 @@
+use std::collections::HashMap;
+
 use regex::Regex;
+
+struct Instructions {
+    multiplications: HashMap<usize, (usize, usize)>,
+    conditionals: HashMap<usize, bool>,
+}
+
+impl Instructions {
+    fn all_multiplications(&self) -> usize {
+        self.multiplications.values().map(|_, (x, y)| x * y).fold(0, |acc, cur: usize| acc + cur)
+    }
+
+    fn only_enabled_multiplications(&self) -> usize {
+
+    }
+}
+
 
 fn main() {
     assert_eq!(161, part1(&test_input()));
@@ -8,6 +26,14 @@ fn main() {
 }
 
 fn part1(input: &str) -> usize {
+    parse(input).all_multiplications()
+}
+
+fn part2(input: &str) -> usize {
+    todo!();
+}
+
+fn parse(input: &str) -> Instructions {
     let regex = Regex::new(r"mul\((\d+)\,(\d+)\)").unwrap();
 
     regex
@@ -27,10 +53,6 @@ fn part1(input: &str) -> usize {
             x * y
         })
         .fold(0, |acc, cur: usize| cur + acc)
-}
-
-fn part2(input: &str) -> usize {
-    todo!();
 }
 
 #[allow(dead_code)]
