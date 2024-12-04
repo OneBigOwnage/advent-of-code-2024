@@ -1,11 +1,29 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
+use itertools::Itertools;
 use regex::Regex;
 
 struct Instructions<'a> {
     source: &'a str,
     multiplications: HashMap<usize, (usize, usize)>,
     conditionals: HashMap<usize, bool>,
+}
+
+impl<'a> Display for Instructions<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Instructions:\n\tMultiplications:{}\n\tConditionals:{}",
+            self.multiplications
+                .iter()
+                .map(|(i, (x, y))| format!("mul(x: {}, y: {}, i: {})", x, y, i))
+                .join(", "),
+            self.conditionals
+                .iter()
+                .map(|(i, c)| format!("conditional(bool: {}, i: {})", c, i))
+                .join(", ")
+        )
+    }
 }
 
 impl Instructions<'_> {
@@ -17,10 +35,12 @@ impl Instructions<'_> {
     }
 
     fn only_enabled_multiplications(&self) -> usize {
-        let mut enabled = false;
+        let mut enabled = true;
         let mut enabled_multiplications: Vec<&(usize, usize)> = vec![];
 
-        for i in 0..self.source.len() {
+        let chars = self.source.chars();
+
+        for i in 0..chars.clone().count() {
             if self.conditionals.get(&i).is_some() {
                 enabled = *self.conditionals.get(&i).unwrap();
             }
@@ -46,7 +66,7 @@ fn main() {
     assert_eq!(161, part1(&test_input()));
     assert_eq!(170807108, part1(&input()));
     assert_eq!(48, part2(&test_input()));
-    assert_eq!(0, part2(&input()));
+    assert_eq!(74838033, part2(&input()));
 }
 
 fn part1(input: &str) -> usize {
@@ -73,7 +93,7 @@ fn parse(input: &str) -> Instructions {
         })
         .collect();
 
-    let regex = Regex::new(r"(don't|do)").unwrap();
+    let regex = Regex::new(r"(don't|do)\(\)").unwrap();
 
     let conditionals: HashMap<usize, bool> = regex
         .captures_iter(input)
@@ -94,13 +114,13 @@ fn parse(input: &str) -> Instructions {
     Instructions {
         source: input,
         multiplications,
-        conditionals: HashMap::new(),
+        conditionals,
     }
 }
 
 #[allow(dead_code)]
 fn test_input() -> String {
-    "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))".to_string()
+    "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))".to_string()
 }
 
 #[allow(dead_code)]
