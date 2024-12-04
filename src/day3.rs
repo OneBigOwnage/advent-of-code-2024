@@ -2,21 +2,45 @@ use std::collections::HashMap;
 
 use regex::Regex;
 
-struct Instructions {
+struct Instructions<'a> {
+    source: &'a str,
     multiplications: HashMap<usize, (usize, usize)>,
     conditionals: HashMap<usize, bool>,
 }
 
-impl Instructions {
+impl Instructions<'_> {
     fn all_multiplications(&self) -> usize {
-        self.multiplications.values().map(|_, (x, y)| x * y).fold(0, |acc, cur: usize| acc + cur)
+        self.multiplications
+            .values()
+            .map(|(x, y)| x * y)
+            .fold(0, |acc, cur: usize| acc + cur)
     }
 
     fn only_enabled_multiplications(&self) -> usize {
+        let mut enabled = false;
+        let mut enabled_multiplications: Vec<&(usize, usize)> = vec![];
 
+        for i in 0..self.source.len() {
+            if self.conditionals.get(&i).is_some() {
+                enabled = *self.conditionals.get(&i).unwrap();
+            }
+
+            if !enabled {
+                continue;
+            }
+
+            match self.multiplications.get(&i) {
+                Some(conditional) => enabled_multiplications.push(conditional),
+                _ => (),
+            };
+        }
+
+        enabled_multiplications
+            .iter()
+            .map(|(x, y)| x * y)
+            .fold(0, |acc, cur: usize| acc + cur)
     }
 }
-
 
 fn main() {
     assert_eq!(161, part1(&test_input()));
@@ -30,29 +54,48 @@ fn part1(input: &str) -> usize {
 }
 
 fn part2(input: &str) -> usize {
-    todo!();
+    parse(input).only_enabled_multiplications()
 }
 
 fn parse(input: &str) -> Instructions {
     let regex = Regex::new(r"mul\((\d+)\,(\d+)\)").unwrap();
 
-    regex
+    let multiplications: HashMap<usize, (usize, usize)> = regex
         .captures_iter(input)
         .map(|captures| {
             let (_, [x_str, y_str]) = captures.extract();
 
+            let i: usize = captures.get(0).unwrap().start();
             let x: usize = x_str.parse().unwrap();
             let y: usize = y_str.parse().unwrap();
 
-            println!(
-                "Found an instruction mul({},{}), which equals {}",
-                x,
-                y,
-                x * y
-            );
-            x * y
+            (i, (x, y))
         })
-        .fold(0, |acc, cur: usize| cur + acc)
+        .collect();
+
+    let regex = Regex::new(r"(don't|do)").unwrap();
+
+    let conditionals: HashMap<usize, bool> = regex
+        .captures_iter(input)
+        .map(|captures| {
+            let (_, [conditional_str]) = captures.extract();
+
+            let i: usize = captures.get(0).unwrap().start();
+            let conditional: bool = match conditional_str {
+                "do" => true,
+                "don't" => false,
+                &_ => panic!("something else than do or don't was encountered!"),
+            };
+
+            (i, conditional)
+        })
+        .collect();
+
+    Instructions {
+        source: input,
+        multiplications,
+        conditionals: HashMap::new(),
+    }
 }
 
 #[allow(dead_code)]
