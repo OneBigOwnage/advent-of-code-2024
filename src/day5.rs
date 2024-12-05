@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 struct PrintQueue {
     rules: Vec<(usize, usize)>,
     updates: Vec<Vec<usize>>,
@@ -29,6 +31,28 @@ impl PrintQueue {
         }
 
         correct
+    }
+
+    fn incorrectly_ordered_updates(&self) -> Vec<Vec<usize>> {
+        let correctly_ordered = self.correctly_ordered_updates();
+
+        self.updates
+            .iter()
+            .filter(|update| correctly_ordered.contains(update))
+            .map(|update| update.to_owned())
+            .collect()
+    }
+
+    fn correct_mistakes(&self, update: &Vec<usize>) -> &Vec<usize> {
+        update.sort_by(|a, b| {
+            if let Some((x, y)) = self.rules.iter().find(|(x, y)| (x == a && y == b) || (x == b && y == a)) {
+
+            } else {
+                return Ordering::Equal;
+            }
+        });
+
+        update
     }
 }
 
@@ -62,7 +86,7 @@ fn parse(input: &str) -> PrintQueue {
 fn main() {
     assert_eq!(143, part1(&test_input()));
     assert_eq!(5166, part1(&input()));
-    assert_eq!(0, part2(&test_input()));
+    assert_eq!(123, part2(&test_input()));
     assert_eq!(0, part2(&input()));
 }
 
@@ -75,7 +99,14 @@ fn part1(input: &str) -> usize {
 }
 
 fn part2(input: &str) -> usize {
-    todo!();
+    let print_queue = parse(input);
+
+    print_queue
+        .incorrectly_ordered_updates()
+        .into_iter()
+        .map(|pages| print_queue.correct_mistakes(&pages))
+        .map(|pages| middle_element(pages.iter().collect()).to_owned())
+        .sum()
 }
 
 #[allow(dead_code)]
