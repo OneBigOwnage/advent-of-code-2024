@@ -43,16 +43,22 @@ impl PrintQueue {
             .collect()
     }
 
-    fn correct_mistakes(&self, update: &Vec<usize>) -> &Vec<usize> {
-        update.sort_by(|a, b| {
-            if let Some((x, y)) = self.rules.iter().find(|(x, y)| (x == a && y == b) || (x == b && y == a)) {
+    fn correct_mistakes(&self, update: &Vec<usize>) -> Vec<usize> {
+        let mut sorted = update.clone();
 
+        sorted.sort_unstable_by(|a, b| {
+            if let Some((_, _)) = self.rules.iter().find(|(x, y)| x == a && y == b) {
+                return Ordering::Less;
+            } else if let Some((_, _)) = self.rules.iter().find(|(x, y)| x == b && y == a) {
+                return Ordering::Greater;
             } else {
                 return Ordering::Equal;
             }
         });
 
-        update
+        println!("{:?} becomes {:?}", update, sorted);
+
+        sorted
     }
 }
 
