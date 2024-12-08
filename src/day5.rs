@@ -38,7 +38,7 @@ impl PrintQueue {
 
         self.updates
             .iter()
-            .filter(|update| correctly_ordered.contains(update))
+            .filter(|update| !correctly_ordered.contains(update))
             .map(|update| update.to_owned())
             .collect()
     }
@@ -46,7 +46,7 @@ impl PrintQueue {
     fn correct_mistakes(&self, update: &Vec<usize>) -> Vec<usize> {
         let mut sorted = update.clone();
 
-        sorted.sort_unstable_by(|a, b| {
+        sorted.sort_by(|a, b| {
             if let Some((_, _)) = self.rules.iter().find(|(x, y)| x == a && y == b) {
                 return Ordering::Less;
             } else if let Some((_, _)) = self.rules.iter().find(|(x, y)| x == b && y == a) {
@@ -55,8 +55,6 @@ impl PrintQueue {
                 return Ordering::Equal;
             }
         });
-
-        println!("{:?} becomes {:?}", update, sorted);
 
         sorted
     }
@@ -93,7 +91,7 @@ fn main() {
     assert_eq!(143, part1(&test_input()));
     assert_eq!(5166, part1(&input()));
     assert_eq!(123, part2(&test_input()));
-    assert_eq!(0, part2(&input()));
+    assert_eq!(4679, part2(&input()));
 }
 
 fn part1(input: &str) -> usize {
